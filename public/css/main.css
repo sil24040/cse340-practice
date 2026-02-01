@@ -1,8 +1,20 @@
 html, body {
-  background-color: lightblue;
   font-family: Arial, sans-serif;
   margin: 0;
   padding: 20px;
+
+  /* Phase 3: theme classes (NESTED INSIDE body rule set) */
+  &.blue-theme {
+    background-color: #e3f2fd;
+  }
+
+  &.green-theme {
+    background-color: #e8f5e8;
+  }
+
+  &.red-theme {
+    background-color: #ffebee;
+  }
 }
 
 nav ul {

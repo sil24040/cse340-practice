@@ -1,0 +1,17 @@
+<%- include('../partials/header') %>
+
+<main>
+  <h1><%= person.name %></h1>
+
+  <p><strong>Title:</strong> <%= person.title %></p>
+  <p><strong>Department:</strong> <%= person.department %></p>
+  <p><strong>Office:</strong> <%= person.office %></p>
+  <p><strong>Phone:</strong> <%= person.phone %></p>
+  <p><strong>Email:</strong> <%= person.email %></p>
+
+  <p style="margin-top: 20px;">
+    <a href="/faculty">&larr; Back to Faculty Directory</a>
+  </p>
+</main>
+
+<%- include('../partials/footer') %>
