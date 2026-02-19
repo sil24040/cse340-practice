@@ -1,0 +1,51 @@
+<%- include('../partials/header') %>
+
+<main>
+  <div class="course-header" style="margin-bottom: 18px;">
+    <h1 style="margin: 0 0 6px;"><%= course.courseCode %> - <%= course.name %></h1>
+
+    <p style="margin: 0 0 6px;">
+      <strong><%= course.departmentCode %></strong> •
+      <%= course.creditHours %> credit hours
+    </p>
+
+    <% if (course.description) { %>
+      <p style="margin: 0;"><%= course.description %></p>
+    <% } %>
+  </div>
+
+  <section>
+    <h2>Available Sections</h2>
+
+    <p>
+      Sort by:
+      <a href="/catalog/<%= course.slug %>?sort=time" class="<%= sortBy === 'time' ? 'active' : '' %>">Time</a> |
+      <a href="/catalog/<%= course.slug %>?sort=professor" class="<%= sortBy === 'professor' ? 'active' : '' %>">Professor</a> |
+      <a href="/catalog/<%= course.slug %>?sort=room" class="<%= sortBy === 'room' ? 'active' : '' %>">Room</a>
+    </p>
+
+    <% if (!sections || sections.length === 0) { %>
+      <p>No sections available for this course.</p>
+    <% } else { %>
+      <div class="section-list">
+        <% sections.forEach(section => { %>
+          <div class="section-card" style="margin: 12px 0; padding: 12px; border: 1px solid #ddd; border-radius: 8px;">
+            <p style="margin: 0 0 6px;"><strong><%= section.time %></strong></p>
+            <p style="margin: 0 0 6px;">Room: <%= section.room %></p>
+
+            <p style="margin: 0;">
+              Instructor:
+              <a href="/faculty/<%= section.professorSlug %>"><%= section.professor %></a>
+            </p>
+          </div>
+        <% }) %>
+      </div>
+    <% } %>
+  </section>
+
+  <p style="margin-top: 18px;">
+    <a href="/catalog">&larr; Back to Course Catalog</a>
+  </p>
+</main>
+
+<%- include('../partials/footer') %>

@@ -1,8 +1,13 @@
 {
   "name": "cse340-practice",
   "dependencies": {
+    "bcrypt": "^6.0.0",
+    "connect-pg-simple": "^10.0.0",
     "ejs": "^3.1.10",
-    "express": "^5.1.0"
+    "express": "^5.1.0",
+    "express-session": "^1.19.0",
+    "express-validator": "^7.3.1",
+    "pg": "^8.18.0"
   },
   "devDependencies": {
     "nodemon": "^3.1.9",

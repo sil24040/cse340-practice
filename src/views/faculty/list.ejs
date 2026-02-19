@@ -6,19 +6,23 @@
 
   <div style="margin: 12px 0;">
     <strong>Sort by:</strong>
-    <a href="/faculty?sort=name" class="<%= currentSort === 'name' ? 'active' : '' %>">Name</a> |
-    <a href="/faculty?sort=department" class="<%= currentSort === 'department' ? 'active' : '' %>">Department</a> |
-    <a href="/faculty?sort=title" class="<%= currentSort === 'title' ? 'active' : '' %>">Title</a>
+    <a href="/faculty?sort=name" class="<%= sortBy === 'name' ? 'active' : '' %>">Name</a> |
+    <a href="/faculty?sort=department" class="<%= sortBy === 'department' ? 'active' : '' %>">Department</a> |
+    <a href="/faculty?sort=title" class="<%= sortBy === 'title' ? 'active' : '' %>">Title</a>
   </div>
 
-  <ul>
-    <% faculty.forEach(p => { %>
-      <li style="margin: 10px 0;">
-        <a href="/faculty/<%= p.id %>"><strong><%= p.name %></strong></a>
-        — <%= p.department %> — <%= p.title %>
-      </li>
-    <% }) %>
-  </ul>
+  <% if (!faculty || faculty.length === 0) { %>
+    <p>No faculty found.</p>
+  <% } else { %>
+    <ul>
+      <% faculty.forEach(p => { %>
+        <li style="margin: 10px 0;">
+          <a href="/faculty/<%= p.slug %>"><strong><%= p.name %></strong></a>
+          — <%= p.department %> — <%= p.title %>
+        </li>
+      <% }) %>
+    </ul>
+  <% } %>
 </main>
 
 <%- include('../partials/footer') %>
