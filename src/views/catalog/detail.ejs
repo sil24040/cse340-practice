@@ -1,51 +1,32 @@
 <%- include('../partials/header') %>
 
-<main>
-  <div class="course-header" style="margin-bottom: 18px;">
-    <h1 style="margin: 0 0 6px;"><%= course.courseCode %> - <%= course.name %></h1>
+<h1><%= course.name %></h1>
+<p><%= course.courseCode %> • <%= course.creditHours %> credits</p>
+<p><%= course.department %></p>
 
-    <p style="margin: 0 0 6px;">
-      <strong><%= course.departmentCode %></strong> •
-      <%= course.creditHours %> credit hours
-    </p>
+<h2>Sections</h2>
 
-    <% if (course.description) { %>
-      <p style="margin: 0;"><%= course.description %></p>
-    <% } %>
-  </div>
+<div class="sort-options">
+  <span>Sort by:</span>
+  <a href="/catalog/<%= course.slug %>?sort=time">Time</a>
+  <a href="/catalog/<%= course.slug %>?sort=professor">Professor</a>
+  <a href="/catalog/<%= course.slug %>?sort=room">Room</a>
+</div>
 
-  <section>
-    <h2>Available Sections</h2>
-
-    <p>
-      Sort by:
-      <a href="/catalog/<%= course.slug %>?sort=time" class="<%= sortBy === 'time' ? 'active' : '' %>">Time</a> |
-      <a href="/catalog/<%= course.slug %>?sort=professor" class="<%= sortBy === 'professor' ? 'active' : '' %>">Professor</a> |
-      <a href="/catalog/<%= course.slug %>?sort=room" class="<%= sortBy === 'room' ? 'active' : '' %>">Room</a>
-    </p>
-
-    <% if (!sections || sections.length === 0) { %>
-      <p>No sections available for this course.</p>
-    <% } else { %>
-      <div class="section-list">
-        <% sections.forEach(section => { %>
-          <div class="section-card" style="margin: 12px 0; padding: 12px; border: 1px solid #ddd; border-radius: 8px;">
-            <p style="margin: 0 0 6px;"><strong><%= section.time %></strong></p>
-            <p style="margin: 0 0 6px;">Room: <%= section.room %></p>
-
-            <p style="margin: 0;">
-              Instructor:
-              <a href="/faculty/<%= section.professorSlug %>"><%= section.professor %></a>
-            </p>
-          </div>
-        <% }) %>
+<div class="section-list">
+  <% if (course.sections.length === 0) { %>
+    <p>No sections available.</p>
+  <% } else { %>
+    <% course.sections.forEach(section => { %>
+      <div class="section-card">
+        <p><strong>Time:</strong> <%= section.time %></p>
+        <p><strong>Room:</strong> <%= section.room %></p>
+        <p><strong>Professor:</strong> <%= section.professor %></p>
       </div>
-    <% } %>
-  </section>
+    <% }) %>
+  <% } %>
+</div>
 
-  <p style="margin-top: 18px;">
-    <a href="/catalog">&larr; Back to Course Catalog</a>
-  </p>
-</main>
+<p><a href="/catalog">← Back to Catalog</a></p>
 
 <%- include('../partials/footer') %>

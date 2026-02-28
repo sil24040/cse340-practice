@@ -1,0 +1,36 @@
+.faculty-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 1.5rem;
+  }
+  
+  .faculty-card {
+    background: white;
+    padding: 1rem;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+  }
+  
+  .faculty-card h3 a {
+    color: #2c5aa0;
+    text-decoration: none;
+  }
+  
+  .faculty-card h3 a:hover {
+    text-decoration: underline;
+  }
+  
+  .sort-options {
+    margin: 1rem 0;
+  }
+  
+  .sort-options a {
+    margin-right: 1rem;
+    color: #2c5aa0;
+    text-decoration: none;
+  }
+  
+  .sort-options a:hover {
+    text-decoration: underline;
+  }
+  

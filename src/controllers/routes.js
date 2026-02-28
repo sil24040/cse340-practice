@@ -1,63 +1,58 @@
 import { Router } from 'express';
 
-import { addDemoHeaders } from '../middleware/demo/headers.js';
+import { homePage } from './home.js';
+import { aboutPage } from './about.js';
+
 import { catalogPage, courseDetailPage } from './catalog/catalog.js';
 import { facultyListPage, facultyDetailPage } from './faculty/faculty.js';
 
-import contactRoutes from './forms/contact.js';
-import registrationRoutes from './forms/registration.js'; // ✅ ADD THIS
+import {
+  showContactForm,
+  processContactForm,
+  contactValidationRules
+} from './contact.js';
+
+import {
+  showRegistrationForm,
+  processRegistration,
+  registrationValidationRules,
+  showLoginForm,
+  processLogin,
+  loginValidationRules,
+  logout
+} from './auth.js';
 
 const router = Router();
 
-/**
- * Router-level middleware for dynamic assets
- * Must be BEFORE route definitions.
- */
+// Section-specific CSS via router-level middleware
 router.use('/catalog', (req, res, next) => {
-  res.addStyle('<link rel="stylesheet" href="/css/catalog.css">');
+  res.addStyle('<link rel="stylesheet" href="/css/catalog.css">', 10);
   next();
 });
 
 router.use('/faculty', (req, res, next) => {
-  res.addStyle('<link rel="stylesheet" href="/css/faculty.css">');
+  res.addStyle('<link rel="stylesheet" href="/css/faculty.css">', 10);
   next();
 });
 
 router.use('/contact', (req, res, next) => {
-  res.addStyle('<link rel="stylesheet" href="/css/contact.css">');
+  res.addStyle('<link rel="stylesheet" href="/css/contact.css">', 10);
   next();
 });
 
-// ✅ ADD THIS middleware (Registration CSS)
 router.use('/register', (req, res, next) => {
-  res.addStyle('<link rel="stylesheet" href="/css/registration.css">');
+  res.addStyle('<link rel="stylesheet" href="/css/register.css">', 10);
   next();
 });
 
-// ROUTES
-router.get('/', (req, res) => {
-  res.render('home', { title: 'Welcome Home' });
+router.use('/login', (req, res, next) => {
+  res.addStyle('<link rel="stylesheet" href="/css/login.css">', 10);
+  next();
 });
 
-router.get('/about', (req, res) => {
-  res.render('about', { title: 'About Me' });
-});
-
-router.get('/products', (req, res) => {
-  res.render('products', { title: 'Our Products' });
-});
-
-router.get('/student', (req, res) => {
-  res.render('student', {
-    title: 'Student',
-    student: {
-      name: 'Sophie Silveira',
-      id: '783969347',
-      email: 'sophiesilveira9@gmail.com',
-      address: 'Rexburg, ID, USA'
-    }
-  });
-});
+// Core routes
+router.get('/', homePage);
+router.get('/about', aboutPage);
 
 router.get('/catalog', catalogPage);
 router.get('/catalog/:slugId', courseDetailPage);
@@ -65,18 +60,15 @@ router.get('/catalog/:slugId', courseDetailPage);
 router.get('/faculty', facultyListPage);
 router.get('/faculty/:slugId', facultyDetailPage);
 
-// ✅ Mount feature routes
-router.use('/contact', contactRoutes);
-router.use('/register', registrationRoutes); // ✅ ADD THIS
+router.get('/contact', showContactForm);
+router.post('/contact', contactValidationRules, processContactForm);
 
-router.get('/demo', addDemoHeaders, (req, res) => {
-  res.render('demo', { title: 'Middleware Demo Page' });
-});
+router.get('/register', showRegistrationForm);
+router.post('/register', registrationValidationRules, processRegistration);
 
-router.get('/test-error', (req, res, next) => {
-  const err = new Error('This is a test error');
-  err.status = 500;
-  next(err);
-});
+router.get('/login', showLoginForm);
+router.post('/login', loginValidationRules, processLogin);
+
+router.get('/logout', logout);
 
 export default router;

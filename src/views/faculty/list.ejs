@@ -1,28 +1,21 @@
 <%- include('../partials/header') %>
 
-<main>
-  <h1><%= title %></h1>
-  <p>Click a faculty member to view details.</p>
+<h1>Faculty Directory</h1>
 
-  <div style="margin: 12px 0;">
-    <strong>Sort by:</strong>
-    <a href="/faculty?sort=name" class="<%= sortBy === 'name' ? 'active' : '' %>">Name</a> |
-    <a href="/faculty?sort=department" class="<%= sortBy === 'department' ? 'active' : '' %>">Department</a> |
-    <a href="/faculty?sort=title" class="<%= sortBy === 'title' ? 'active' : '' %>">Title</a>
-  </div>
+<div class="sort-options">
+  <span>Sort by:</span>
+  <a href="/faculty?sort=name">Name</a>
+  <a href="/faculty?sort=department">Department</a>
+</div>
 
-  <% if (!faculty || faculty.length === 0) { %>
-    <p>No faculty found.</p>
-  <% } else { %>
-    <ul>
-      <% faculty.forEach(p => { %>
-        <li style="margin: 10px 0;">
-          <a href="/faculty/<%= p.slug %>"><strong><%= p.name %></strong></a>
-          — <%= p.department %> — <%= p.title %>
-        </li>
-      <% }) %>
-    </ul>
-  <% } %>
-</main>
+<div class="faculty-list">
+  <% faculty.forEach(f => { %>
+    <div class="faculty-card">
+      <h3><a href="/faculty/<%= f.slug %>"><%= f.name %></a></h3>
+      <p><%= f.title %></p>
+      <p><%= f.department %></p>
+    </div>
+  <% }) %>
+</div>
 
 <%- include('../partials/footer') %>
