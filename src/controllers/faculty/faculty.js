@@ -1,36 +1,30 @@
-import { getAllFaculty, getFacultyBySlug } from '../../models/faculty/faculty.js';
+import { getFacultyBySlug, getSortedFaculty } from '../../models/faculty/faculty.js';
 
-export async function facultyListPage(req, res, next) {
-  try {
-    const sortBy = req.query.sort || 'name';
-    const faculty = await getAllFaculty(sortBy);
+const facultyListPage = async (req, res) => {
+    const sortBy = req.query.sort || 'department';
+    const faculty = await getSortedFaculty(sortBy);
 
     res.render('faculty/list', {
-      title: 'Faculty Directory',
-      faculty,
-      currentSort: sortBy
+        title: 'Faculty',
+        faculty,
+        currentSort: sortBy
     });
-  } catch (error) {
-    next(error);
-  }
-}
+};
 
-export async function facultyDetailPage(req, res, next) {
-  try {
-    const slug = req.params.slugId;
-    const facultyMember = await getFacultyBySlug(slug);
+const facultyDetailPage = async (req, res, next) => {
+    const facultyId = req.params.facultyId;
+    const facultyMember = await getFacultyBySlug(facultyId);
 
     if (Object.keys(facultyMember).length === 0) {
-      const err = new Error(`Faculty member ${slug} not found`);
-      err.status = 404;
-      return next(err);
+        const err = new Error(`Faculty member ${facultyId} not found`);
+        err.status = 404;
+        return next(err);
     }
 
     res.render('faculty/detail', {
-      title: facultyMember.name,
-      faculty: facultyMember
+        title: facultyMember.name,
+        facultyMember
     });
-  } catch (error) {
-    next(error);
-  }
-}
+};
+
+export { facultyListPage, facultyDetailPage };

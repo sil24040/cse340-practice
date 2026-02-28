@@ -1,0 +1,28 @@
+<header class="site-header">
+    <nav class="main-nav">
+        <ul>
+            <!-- Always visible -->
+            <li><a href="/">Home</a></li>
+            <li><a href="/about">About</a></li>
+            <li><a href="/catalog">Catalog</a></li>
+            <li><a href="/faculty">Faculty</a></li>
+            <li><a href="/contact">Contact</a></li>
+
+            <!-- Logged-in only -->
+            <% if (isLoggedIn) { %>
+                <li><a href="/dashboard">Dashboard</a></li>
+                <li><a href="/contact/responses">Responses</a></li>
+                <li><a href="/register/list">Users</a></li>
+                <li><a href="/logout">Logout</a></li>
+            <% } %>
+
+            <!-- Logged-out only -->
+            <% if (!isLoggedIn) { %>
+                <li><a href="/login">Login</a></li>
+                <li><a href="/register">Register</a></li>
+            <% } %>
+        </ul>
+    </nav>
+
+    <p class="greeting"><%= greeting %></p>
+</header>

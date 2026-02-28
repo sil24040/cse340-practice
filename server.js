@@ -7,7 +7,7 @@ import connectPgSimple from 'connect-pg-simple';
 import router from './src/controllers/routes.js';
 import { setupDatabase, testConnection } from './src/models/setup.js';
 import db, { caCert, NODE_ENV } from './src/models/db.js';
-import startSessionCleanup from './src corrected file /utils/session-cleanup.js';
+import startSessionCleanup from './src/utils/session-cleanup.js';
 import { addLocalVariables } from './src/middleware/global.js';
 
 const __filename = fileURLToPath(import.meta.url);

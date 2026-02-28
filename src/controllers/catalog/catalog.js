@@ -1,38 +1,39 @@
 import { getAllCourses, getCourseBySlug } from '../../models/catalog/courses.js';
 import { getSectionsByCourseSlug } from '../../models/catalog/catalog.js';
 
-export async function catalogPage(req, res, next) {
-  try {
-    const courses = await getAllCourses();
+
+const catalogPage = async (req, res) => {
+
+  const courses = await getAllCourses();
+    
     res.render('catalog/list', {
-      title: 'Course Catalog',
-      courses
+        title: 'Course Catalog',
+        courses: courses
     });
-  } catch (error) {
-    next(error);
-  }
-}
+};
 
-export async function courseDetailPage(req, res, next) {
-  try {
-    const courseSlug = req.params.slugId;
-    const sortBy = req.query.sort || 'time';
-
+const courseDetailPage = async (req, res, next) => {
+    const courseSlug = req.params.courseSlug;
+    
     const course = await getCourseBySlug(courseSlug);
+    
     if (Object.keys(course).length === 0) {
-      const err = new Error(`Course ${courseSlug} not found`);
-      err.status = 404;
-      return next(err);
+        const err = new Error(`Course ${courseSlug} not found`);
+        err.status = 404;
+        return next(err);
     }
-
+    
+   
+    const sortBy = req.query.sort || 'time';
     const sections = await getSectionsByCourseSlug(courseSlug, sortBy);
 
+    
     res.render('catalog/detail', {
-      title: `${course.courseCode} - ${course.name}`,
-      course: { ...course, sections },
-      currentSort: sortBy
+        title: `${course.courseCode} - ${course.name}`,
+        course: course,
+        sections: sections,
+        currentSort: sortBy
     });
-  } catch (error) {
-    next(error);
-  }
-}
+};
+
+export { catalogPage, courseDetailPage };

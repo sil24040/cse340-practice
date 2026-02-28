@@ -1,0 +1,43 @@
+<%- include('../../partials/header') %>
+
+<main>
+    <section class="contact-wrapper">
+        <h1>Contact Us</h1>
+        <p class="contact-intro">
+            We’d love to hear from you. Send us a message and we’ll respond soon.
+        </p>
+
+        <form action="/contact" method="POST" class="contact-form" novalidate>
+            <div class="form-group">
+                <label for="subject">Subject</label>
+                <input
+                    type="text"
+                    id="subject"
+                    name="subject"
+                    required
+                    minlength="2"
+                    placeholder="Brief summary of your message"
+                >
+            </div>
+
+            <div class="form-group">
+                <label for="message">Message</label>
+                <textarea
+                    id="message"
+                    name="message"
+                    rows="6"
+                    required
+                    minlength="10"
+                    placeholder="Tell us more about what you need..."
+                ></textarea>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit">Send Message</button>
+                <a href="/contact/responses" class="secondary-link">View Submissions</a>
+            </div>
+        </form>
+    </section>
+</main>
+
+<%- include('../../partials/footer') %>

@@ -1,32 +1,41 @@
 <%- include('../partials/header') %>
+<main>
+    <div class="course-header">
+        <h1><%= course.name %></h1>
+        <p class="course-meta"><%= course.courseCode %> • <%= course.creditHours %> credits</p>
+        <p class="course-description"><%= course.description %></p>
+    </div>
 
-<h1><%= course.name %></h1>
-<p><%= course.courseCode %> • <%= course.creditHours %> credits</p>
-<p><%= course.department %></p>
+    <div class="sections">
+        <div class="sections-header">
+            <h2>Available Sections</h2>
+            <% if (sections.length > 0) { %>
+                <div class="sort-options">
+                    <span>Sort by: </span>
+                    <a href="/catalog/<%= course.slug %>" class="<%= currentSort === 'time' ? 'active' : '' %>">Time</a>
+                    <a href="/catalog/<%= course.slug %>?sort=professor" class="<%= currentSort === 'professor' ? 'active' : '' %>">Professor</a>
+                    <a href="/catalog/<%= course.slug %>?sort=room" class="<%= currentSort === 'room' ? 'active' : '' %>">Room</a>
+                </div>
+            <% } %>
+        </div>
 
-<h2>Sections</h2>
+        <% if (sections.length > 0) { %>
+            <% sections.forEach(section => { %>
+                <div class="section">
+                    <div class="section-time"><%= section.time %></div>
+                    <div class="section-room"><%= section.room %></div>
+                    <div class="section-professor">
+                        <a href="/faculty/<%= section.professorSlug %>"><%= section.professor %></a>
+                    </div>
+                </div>
+            <% }); %>
+        <% } else { %>
+            <p class="no-sections">No sections are currently scheduled for this course. Please check back later or contact the <%= course.department %> department for more information.</p>
+        <% } %>
+    </div>
 
-<div class="sort-options">
-  <span>Sort by:</span>
-  <a href="/catalog/<%= course.slug %>?sort=time">Time</a>
-  <a href="/catalog/<%= course.slug %>?sort=professor">Professor</a>
-  <a href="/catalog/<%= course.slug %>?sort=room">Room</a>
-</div>
-
-<div class="section-list">
-  <% if (course.sections.length === 0) { %>
-    <p>No sections available.</p>
-  <% } else { %>
-    <% course.sections.forEach(section => { %>
-      <div class="section-card">
-        <p><strong>Time:</strong> <%= section.time %></p>
-        <p><strong>Room:</strong> <%= section.room %></p>
-        <p><strong>Professor:</strong> <%= section.professor %></p>
-      </div>
-    <% }) %>
-  <% } %>
-</div>
-
-<p><a href="/catalog">← Back to Catalog</a></p>
-
+    <div class="navigation">
+        <p><a href="/catalog">&larr; Back to Course Catalog</a></p>
+    </div>
+</main>
 <%- include('../partials/footer') %>

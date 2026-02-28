@@ -1,0 +1,46 @@
+<%- include('../../partials/header') %>
+
+<main>
+    <section class="responses-section">
+        <h1>Messages Received</h1>
+
+        <div class="responses-summary">
+            <span>
+                <%= contactForms.length %> 
+                <%= contactForms.length === 1 ? 'submission' : 'submissions' %>
+            </span>
+
+            <a href="/contact" class="new-message-link">Send a New Message</a>
+        </div>
+
+        <% if (contactForms.length === 0) { %>
+            <div class="empty-state">
+                <p>No messages have been submitted yet.</p>
+                <a href="/contact">Be the first to reach out</a>
+            </div>
+        <% } else { %>
+            <div class="responses-grid">
+                <% contactForms.forEach(entry => { %>
+                    <article class="response-card">
+                        <header class="response-header">
+                            <h3><%= entry.subject %></h3>
+                        </header>
+
+                        <p class="response-body">
+                            <%= entry.message %>
+                        </p>
+
+                        <footer class="response-footer">
+                            <time>
+                                Submitted on 
+                                <%= new Date(entry.submitted).toLocaleString() %>
+                            </time>
+                        </footer>
+                    </article>
+                <% }) %>
+            </div>
+        <% } %>
+    </section>
+</main>
+
+<%- include('../../partials/footer') %>

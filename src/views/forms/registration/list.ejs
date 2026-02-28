@@ -1,0 +1,31 @@
+<%- include('../../partials/header') %>
+<main>
+    <h1><%= title %></h1>
+
+    <% if (users && users.length > 0) { %>
+        <div class="users-list">
+            <% users.forEach(form => { %>
+                <div class="user-card">
+                    <div class="user-header">
+                        <h3><%= form.name %></h3>
+                        <span class="user-id">ID: <%= form.id %> </span>
+                    </div>
+                    <div class="user-details">
+                        <div class="detail-item">
+                            <div class="label">Email:</div>
+                            <div class="value"><%= form.email %></div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="label">Registered</div>
+                            <div class="value"><%= new Date(form.created_at).toLocaleDateString() %></div>
+                        </div>
+                    </div>
+                </div>
+
+              <% }); %>
+        </div>
+    <% } else { %>
+        <p class="no-users">No users registered yet.</p>    
+    <% } %>
+</main>
+<%- include('../../partials/footer') %>
