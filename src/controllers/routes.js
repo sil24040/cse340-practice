@@ -1,109 +1,72 @@
 import { Router } from 'express';
-
-// Basic pages
-import { homePage } from './home.js';
-import { aboutPage } from './about.js';
-
-// Catalog
+import { addDemoHeaders } from '../middleware/demo/headers.js';
 import { catalogPage, courseDetailPage } from './catalog/catalog.js';
+import { facultyListPage, facultyDetailPage } from './faculty/faculty.js'
+import { homePage, aboutPage, demoPage, testErrorPage } from './index.js';
+import contactRoutes from './forms/contact.js';
+import registrationRoutes from './forms/registration.js';
+import loginRoutes, { processLogout, showDashboard } from './forms/login.js';
+import { requireLogin } from '../middleware/auth.js';
 
-// Faculty
-import { facultyListPage, facultyDetailPage } from './faculty/faculty.js';
-
-// Contact (form controller)
-import {
-  showContactForm,
-  processContactForm,
-  contactValidationRules
-} from './contact.js';
-
-// Registration
-import {
-  showRegistrationForm,
-  processRegistration,
-  registrationValidationRules
-} from './auth/registration.js';
-
-// Login
-import {
-  showLoginForm,
-  processLogin,
-  loginValidationRules,
-  logout
-} from './auth/login.js';
-
+// Create a new router instance
 const router = Router();
 
-/* -----------------------------------------
-   Router-Level CSS Injection
------------------------------------------- */
-
 router.use('/catalog', (req, res, next) => {
-  res.addStyle('<link rel="stylesheet" href="/css/catalog.css">');
-  next();
+    res.addStyle('<link rel="stylesheet" href="/css/catalog.css">');
+    next();
 });
 
 router.use('/faculty', (req, res, next) => {
-  res.addStyle('<link rel="stylesheet" href="/css/faculty.css">');
-  next();
+    res.addStyle('<link rel="stylesheet" href="/css/faculty.css">');
+    next();
 });
 
 router.use('/contact', (req, res, next) => {
-  res.addStyle('<link rel="stylesheet" href="/css/contact.css">');
-  next();
-});
-
-router.use('/register', (req, res, next) => {
-  res.addStyle('<link rel="stylesheet" href="/css/register.css">');
-  next();
+    res.addStyle('<link rel="stylesheet" href="/css/contact.css">');
+    next();
 });
 
 router.use('/login', (req, res, next) => {
-  res.addStyle('<link rel="stylesheet" href="/css/login.css">');
-  next();
+    res.addStyle('<link rel="stylesheet" href="/css/login.css">');
+    next();
 });
 
-/* -----------------------------------------
-   Core Pages
------------------------------------------- */
+router.use('/dashboard', (req, res, next) => {
+    res.addStyle('<link rel="stylesheet" href="/css/login.css">');
+    next();
+});
 
+// Home and basic pages
 router.get('/', homePage);
 router.get('/about', aboutPage);
 
-/* -----------------------------------------
-   Catalog
------------------------------------------- */
-
+// Course catalog routes
 router.get('/catalog', catalogPage);
-router.get('/catalog/:slugId', courseDetailPage);
+router.get('/catalog/:courseSlug', courseDetailPage);
 
-/* -----------------------------------------
-   Faculty
------------------------------------------- */
+// Demo page with special middleware
+router.get('/demo', addDemoHeaders, demoPage);
 
-router.get('/faculty', facultyListPage);
-router.get('/faculty/:slugId', facultyDetailPage);
+// Route to trigger a test error
+router.get('/test-error', testErrorPage);
 
-/* -----------------------------------------
-   Contact Form
------------------------------------------- */
+router.get('/faculty', facultyListPage );
+router.get('/faculty/:facultyId', facultyDetailPage);
 
-router.get('/contact', showContactForm);
-router.post('/contact', contactValidationRules, processContactForm);
+router.use('/contact', contactRoutes);
 
-/* -----------------------------------------
-   Registration
------------------------------------------- */
+router.use('/register', (req, res, next) => {
+    res.addStyle('<link rel="stylesheet" href="/css/registration.css">');
+    next();
+});
 
-router.get('/register', showRegistrationForm);
-router.post('/register', registrationValidationRules, processRegistration);
+router.use('/register', registrationRoutes);
 
-/* -----------------------------------------
-   Login / Logout
------------------------------------------- */
+// Login routes (form and submission)
+router.use('/login', loginRoutes);
 
-router.get('/login', showLoginForm);
-router.post('/login', loginValidationRules, processLogin);
-router.get('/logout', logout);
+// Authentication-related routes at root level
+router.get('/logout', processLogout);
+router.get('/dashboard', requireLogin, showDashboard);
 
 export default router;

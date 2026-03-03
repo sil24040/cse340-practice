@@ -1,7 +1,11 @@
+import { Router } from 'express';
 import { body, validationResult } from 'express-validator';
-import { insertContact } from '../models/contact.js';
+import { insertContact } from '../../models/contact.js';
 
-export const contactValidationRules = [
+const router = Router();
+
+// Validation rules
+const contactValidationRules = [
   body('subject')
     .trim()
     .notEmpty()
@@ -14,21 +18,23 @@ export const contactValidationRules = [
     .withMessage('Message is required')
 ];
 
-export function showContactForm(req, res) {
-  res.render('contact/form', {
+// Show form
+router.get('/', (req, res) => {
+  res.render('forms/contact/form', {
     title: 'Contact Us',
     errors: [],
     old: { subject: '', message: '' }
   });
-}
+});
 
-export async function processContactForm(req, res, next) {
+// Process form
+router.post('/', contactValidationRules, async (req, res, next) => {
   try {
     const errors = validationResult(req);
     const { subject, message } = req.body;
 
     if (!errors.isEmpty()) {
-      return res.status(400).render('contact/form', {
+      return res.status(400).render('forms/contact/form', {
         title: 'Contact Us',
         errors: errors.array(),
         old: { subject, message }
@@ -37,10 +43,12 @@ export async function processContactForm(req, res, next) {
 
     await insertContact(subject, message);
 
-    res.render('contact/success', {
+    res.render('forms/contact/success', {
       title: 'Message Sent'
     });
   } catch (error) {
     next(error);
   }
-}
+});
+
+export default router;

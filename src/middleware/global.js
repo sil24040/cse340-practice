@@ -1,86 +1,126 @@
-const setHeadAssetsFunctionality = (res) => {
-  // Adds asset management to the routes, including css and js with priority
-  res.locals.styles = [];
-  res.locals.scripts = [];
+import db from '../models/db.js';
 
-  // res.addStyle(css, priority) - Add CSS/link tags
-  res.addStyle = (css, priority = 0) => {
-    res.locals.styles.push({ content: css, priority });
-  };
-
-  // res.addScript(js, priority) - Add script tags 
-  res.addScript = (js, priority = 0) => {
-    res.locals.scripts.push({ content: js, priority });
-  };
-
-  // These functions will be available in EJS templates
-  res.locals.renderStyles = () => {
-    return res.locals.styles
-      // Sort by priority: higher numbers load first
-      .sort((a, b) => b.priority - a.priority)
-      .map(item => item.content)
-      .join("\n");
-  };
-
-  res.locals.renderScripts = () => {
-    return res.locals.scripts
-      // Sort by priority: higher numbers load first
-      .sort((a, b) => b.priority - a.priority)
-      .map(item => item.content)
-      .join("\n");
-  };
-};
-const addLocalVariables = (req, res, next) => {
-  // Set local variables
-  const now = new Date();
-  const hour = now.getHours();
-  const versionIteration = "v1.1.";
-  const themes = ["blue-theme", "green-theme", "red-theme"];
-  const randomTheme = themes[Math.floor(Math.random() * themes.length)];
-  const activePage = req.path.split("/")[1] || "home";
-
-  // Set greetings in Japanese and English based on Time
-  const greeting =
-    hour < 5 ? { jp: "Nande Okiteru No!?", en: "Why Are You Awake!?" } :
-      hour < 12 ? { jp: "Ohayo Gozaimasu!", en: "Good Morning" } :
-        hour < 18 ? { jp: "Konnichiwa!", en: "Good Day" } :
-          { jp: "Konbanwa!", en: "Good Evening" };
-
-  // Make following variables available to all templates
-  res.locals.NODE_ENV = process.env.NODE_ENV?.toLowerCase() || "production";
-  res.locals.currentDate = now;
-  res.locals.currentYear = now.getFullYear();
-  res.locals.queryParams = { ...req.query };
-  res.locals.greetingJP = greeting.jp;
-  res.locals.greetingEN = greeting.en;
-  res.locals.bodyClass = randomTheme;
-  res.locals.versionNumber = `${versionIteration}${now.getFullYear().toString().slice(2)}${(now.getMonth() + 1).toString().padStart(2, "0")}`;
-  res.locals.activePage = activePage;
-
-  setHeadAssetsFunctionality(res);
-
-  next();
-};
-const devLogs = (req, res, next) => {
-  // Logs to terminal while in development mode
-  const isDev = res.locals.NODE_ENV === "development";
-
-  if (isDev && !req.path.startsWith("/.")) {
-    console.log(`${req.method} ${req.url}`);
-  }
-  res.on("finish", () => {
-    if (!isDev) return;
-
-    if (Object.keys(req.query).length > 0) {
-      console.log("Query:", req.query);
-    }
-    if (Object.keys(req.params).length > 0) {
-      console.log("Params:", req.params);
-    }
-    console.log(`Response Status: ${res.statusCode}`);
-  });
-
-  next();
+/**
+ * Core function that gets all sections (course offerings) for a specific course.
+ * Works with either course ID or slug - this pattern reduces code duplication.
+ * 
+ * @param {string|number} identifier - Course ID or slug
+ * @param {string} identifierType - 'id' or 'slug' (default: 'slug')
+ * @param {string} sortBy - Sort option: 'time', 'room', or 'professor' (default: 'time')
+ * @returns {Promise<Array>} Array of section objects with course, faculty, and department info
+ */
+const getSectionsByCourse = async (identifier, identifierType = 'slug', sortBy = 'time') => {
+    // Build WHERE clause dynamically based on whether we're searching by ID or slug
+    // Using $1 prevents SQL injection - never concatenate user input into SQL!
+    const whereClause = identifierType === 'id' ? 'c.id = $1' : 'c.slug = $1';
+    
+    /**
+     * Let PostgreSQL do the sorting - it's faster than sorting in JavaScript.
+     * SUBSTRING with regex extracts the hour from time strings like "Mon Wed Fri 8:00-8:50".
+     * The ::INTEGER cast converts the extracted string to a number for proper sorting.
+     */
+    const orderByClause = sortBy === 'room' ? 'cat.room' : 
+                          sortBy === 'professor' ? 'f.last_name, f.first_name' :
+                          "SUBSTRING(cat.time FROM '(\\d{1,2}):(\\d{2})')::INTEGER";
+    
+    /**
+     * Join catalog with courses, faculty, and departments to get complete information.
+     * Note: We're using template literals for ORDER BY because PostgreSQL doesn't allow
+     * parameterized ORDER BY clauses. The values are whitelisted above, so this is safe.
+     */
+    const query = `
+        SELECT cat.id, cat.time, cat.room, 
+               c.course_code, c.name as course_name, c.description, c.credit_hours,
+               f.first_name, f.last_name, f.slug as faculty_slug, f.title as faculty_title,
+               d.name as department_name, d.code as department_code
+        FROM catalog cat
+        JOIN courses c ON cat.course_slug = c.slug
+        JOIN faculty f ON cat.faculty_slug = f.slug
+        JOIN departments d ON c.department_id = d.id
+        WHERE ${whereClause}
+        ORDER BY ${orderByClause}
+    `;
+    
+    const result = await db.query(query, [identifier]);
+  
+    return result.rows.map(section => ({
+        id: section.id,
+        time: section.time,
+        room: section.room,
+        courseCode: section.course_code,
+        courseName: section.course_name,
+        description: section.description,
+        creditHours: section.credit_hours,
+        professor: `${section.first_name} ${section.last_name}`,
+        professorSlug: section.faculty_slug,
+        professorTitle: section.faculty_title,
+        department: section.department_name,
+        departmentCode: section.department_code
+    }));
 };
 
-export { addLocalVariables, devLogs };
+/**
+ * Core function that gets all courses taught by a specific faculty member.
+ * Similar pattern to getSectionsByCourse - same logic, different perspective.
+ * 
+ * @param {string|number} identifier - Faculty ID or slug
+ * @param {string} identifierType - 'id' or 'slug' (default: 'slug')
+ * @param {string} sortBy - Sort option: 'time', 'room', or 'course' (default: 'time')
+ * @returns {Promise<Array>} Array of section objects with course, faculty, and department info
+ */
+const getCoursesByFaculty = async (identifier, identifierType = 'slug', sortBy = 'time') => {
+    const whereClause = identifierType === 'id' ? 'f.id = $1' : 'f.slug = $1';
+    
+    const orderByClause = sortBy === 'room' ? 'cat.room' : 
+                          sortBy === 'course' ? 'c.course_code' :
+                          "SUBSTRING(cat.time FROM '(\\d{1,2}):(\\d{2})')::INTEGER";
+    
+    const query = `
+        SELECT cat.id, cat.time, cat.room, 
+               c.course_code, c.name as course_name, c.description, c.credit_hours,
+               f.first_name, f.last_name, f.slug as faculty_slug, f.title as faculty_title,
+               d.name as department_name, d.code as department_code
+        FROM catalog cat
+        JOIN courses c ON cat.course_slug = c.slug
+        JOIN faculty f ON cat.faculty_slug = f.slug
+        JOIN departments d ON c.department_id = d.id
+        WHERE ${whereClause}
+        ORDER BY ${orderByClause}
+    `;
+    
+    const result = await db.query(query, [identifier]);
+    
+    return result.rows.map(section => ({
+        id: section.id,
+        time: section.time,
+        room: section.room,
+        courseCode: section.course_code,
+        courseName: section.course_name,
+        description: section.description,
+        creditHours: section.credit_hours,
+        professor: `${section.first_name} ${section.last_name}`,
+        professorSlug: section.faculty_slug,
+        professorTitle: section.faculty_title,
+        department: section.department_name,
+        departmentCode: section.department_code
+    }));
+};
+
+const getSectionsByCourseId = (courseId, sortBy = 'time') => 
+    getSectionsByCourse(courseId, 'id', sortBy);
+
+const getSectionsByCourseSlug = (courseSlug, sortBy = 'time') => 
+    getSectionsByCourse(courseSlug, 'slug', sortBy);
+
+const getCoursesByFacultyId = (facultyId, sortBy = 'time') => 
+    getCoursesByFaculty(facultyId, 'id', sortBy);
+
+const getCoursesByFacultySlug = (facultySlug, sortBy = 'time') => 
+    getCoursesByFaculty(facultySlug, 'slug', sortBy);
+
+export { 
+    getSectionsByCourseId,
+    getSectionsByCourseSlug,
+    getCoursesByFacultyId,
+    getCoursesByFacultySlug
+};

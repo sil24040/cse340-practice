@@ -6,7 +6,7 @@ import connectPgSimple from 'connect-pg-simple';
 
 import router from './src/controllers/routes.js';
 import { setupDatabase, testConnection } from './src/models/setup.js';
-import db, { caCert, NODE_ENV } from './src/models/db.js';
+import db from './src/models/db.js';
 import startSessionCleanup from './src/utils/session-cleanup.js';
 import { addLocalVariables } from './src/middleware/global.js';
 
@@ -23,11 +23,9 @@ app.use(
     store: new PgSession({
       conObject: {
         connectionString: process.env.DB_URL,
-        ssl: {
-          ca: caCert,
-          rejectUnauthorized: true,
-          checkServerIdentity: () => undefined
-        }
+        ssl: process.env.DB_SSL === 'true'
+          ? { rejectUnauthorized: false }
+          : false
       },
       tableName: 'session',
       createTableIfMissing: true
@@ -36,7 +34,7 @@ app.use(
     resave: false,
     saveUninitialized: false,
     cookie: {
-      secure: NODE_ENV.includes('dev') !== true,
+      secure: process.env.NODE_ENV === 'production',
       httpOnly: true,
       maxAge: 24 * 60 * 60 * 1000
     }
@@ -74,9 +72,9 @@ app.use((err, req, res, next) => {
 
   const context = {
     title: status === 404 ? 'Page Not Found' : 'Server Error',
-    error: NODE_ENV === 'production' ? 'An error occurred' : err.message,
-    stack: NODE_ENV === 'production' ? null : err.stack,
-    NODE_ENV
+    error: process.env.NODE_ENV === 'production' ? 'An error occurred' : err.message,
+    stack: process.env.NODE_ENV === 'production' ? null : err.stack,
+    NODE_ENV: process.env.NODE_ENV
   };
 
   try {

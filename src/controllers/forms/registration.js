@@ -1,91 +1,61 @@
-import bcrypt from 'bcrypt';
+import { Router } from 'express';
 import { body, validationResult } from 'express-validator';
-import { createUser, findUserByEmail } from '../../models/users.js';
+import bcrypt from 'bcrypt';
+import { emailExists, saveUser, getAllUsers } from '../../models/forms/registration.js';
 
-/**
- * Validation rules for registration
- */
-export const registrationValidationRules = [
-  body('firstName')
-    .trim()
-    .notEmpty()
-    .withMessage('First name is required'),
+const router = Router();
 
-  body('lastName')
-    .trim()
-    .notEmpty()
-    .withMessage('Last name is required'),
-
-  body('email')
-    .trim()
-    .isEmail()
-    .withMessage('A valid email is required')
-    .normalizeEmail(),
-
-  body('password')
-    .isLength({ min: 8 })
-    .withMessage('Password must be at least 8 characters'),
-
-  body('confirmPassword')
-    .custom((value, { req }) => value === req.body.password)
-    .withMessage('Passwords must match')
+const registrationValidation = [
+    body('name').trim().isLength({ min: 2 }).withMessage('Name must be at least 2 characters'),
+    body('email').trim().isEmail().normalizeEmail().withMessage('Must be a valid email address'),
+    body('emailConfirm').trim()
+        .custom((value, { req }) => value === req.body.email)
+        .withMessage('Email addresses must match'),
+    body('password')
+        .isLength({ min: 8 })
+        .matches(/[0-9]/).withMessage('Password must contain at least one number')
+        .matches(/[!@#$%^&*]/).withMessage('Password must contain at least one special character'),
+    body('passwordConfirm')
+        .custom((value, { req }) => value === req.body.password)
+        .withMessage('Passwords must match'),
 ];
 
-/**
- * Show the registration form
- */
-export function showRegistrationForm(req, res) {
-  res.render('auth/register', {
-    title: 'Register',
-    errors: [],
-    old: { firstName: '', lastName: '', email: '' }
-  });
-}
+const showRegistrationForm = (req, res) => {
+    res.render('forms/registration/form', {
+        title: 'User Registration'
+    });
+};
 
-/**
- * Handle registration submission
- */
-export async function processRegistration(req, res, next) {
-  try {
+const processRegistration = async (req, res) => {
     const errors = validationResult(req);
-    const { firstName, lastName, email, password } = req.body;
-
-    // If validation fails, re-render form with errors + sticky values
     if (!errors.isEmpty()) {
-      return res.status(400).render('auth/register', {
-        title: 'Register',
-        errors: errors.array(),
-        old: { firstName, lastName, email }
-      });
+        console.error('Registration validation errors:', errors.array());
+        return res.redirect('/register');
     }
 
-    // Check if email already exists
-    const existingUser = await findUserByEmail(email);
-    if (existingUser) {
-      return res.status(400).render('auth/register', {
-        title: 'Register',
-        errors: [{ msg: 'Email is already registered' }],
-        old: { firstName, lastName, email }
-      });
+    const { name, email, password } = req.body;
+
+    const duplicate = await emailExists(email);
+    if (duplicate) {
+        console.error('Email already registered:', email);
+        return res.redirect('/register');
     }
 
-    // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
+    await saveUser(name, email, hashedPassword);
+    res.redirect('/register/list');
+};
 
-    // Create user in DB
-    const newUser = await createUser(firstName, lastName, email, hashedPassword);
+const showAllUsers = async (req, res) => {
+    const users = await getAllUsers();
+    res.render('forms/registration/list', {
+        title: 'Registered Users',
+        users
+    });
+};
 
-    // Log user in automatically
-    req.session.user = {
-      id: newUser.id,
-      firstName: newUser.firstName,
-      lastName: newUser.lastName,
-      email: newUser.email
-    };
+router.get('/', showRegistrationForm);
+router.post('/', ...registrationValidation, processRegistration);
+router.get('/list', showAllUsers);
 
-    // Redirect to home page
-    res.redirect('/');
-  } catch (error) {
-    next(error);
-  }
-}
+export default router;
